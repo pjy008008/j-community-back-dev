@@ -1,0 +1,3 @@
+package com.pjy008008.j_community.controller.dto;
+
+public record ErrorResponse(String timestamp, int status, String error, String message) {}
