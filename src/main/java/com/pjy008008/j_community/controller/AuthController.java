@@ -5,6 +5,7 @@ import com.pjy008008.j_community.controller.dto.ErrorResponse;
 import com.pjy008008.j_community.controller.dto.LoginRequest;
 import com.pjy008008.j_community.controller.dto.RegisterRequest;
 import com.pjy008008.j_community.entity.User;
+import com.pjy008008.j_community.model.Role;
 import com.pjy008008.j_community.repository.UserRepository;
 import com.pjy008008.j_community.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,7 @@ public class AuthController {
                 .username(registerRequest.username())
                 .email(registerRequest.email())
                 .password(passwordEncoder.encode(registerRequest.password()))
+                .role(Role.ROLE_USER)
                 .build();
 
         userRepository.save(user);
