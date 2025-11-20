@@ -51,6 +51,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/posts").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/communities/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/communities").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/communities/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/communities/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/posts/{postId}/comments").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/{postId}/comments").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/comments/{commentId}/replies").authenticated()
