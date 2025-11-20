@@ -2,6 +2,7 @@ package com.pjy008008.j_community.controller;
 
 import com.pjy008008.j_community.controller.dto.CommunityCreateRequest;
 import com.pjy008008.j_community.controller.dto.CommunityResponse;
+import com.pjy008008.j_community.controller.dto.CommunityUpdateRequest;
 import com.pjy008008.j_community.controller.dto.ErrorResponse;
 import com.pjy008008.j_community.service.CommunityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -68,5 +69,37 @@ public class CommunityController {
     ) {
         CommunityResponse community = communityService.getCommunityByName(name);
         return ResponseEntity.ok(community);
+    }
+
+    @Operation(summary = "커뮤니티 수정 (관리자 전용)", description = "커뮤니티 정보를 수정합니다. (ADMIN 권한 필요)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공",
+                    content = @Content(schema = @Schema(implementation = CommunityResponse.class))),
+            @ApiResponse(responseCode = "404", description = "커뮤니티를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이름 중복",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<CommunityResponse> updateCommunity(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody CommunityUpdateRequest request
+    ) {
+        CommunityResponse response = communityService.updateCommunity(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "커뮤니티 삭제 (관리자 전용)", description = "커뮤니티를 삭제합니다. (ADMIN 권한 필요)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "커뮤니티를 찾을 수 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCommunity(
+            @PathVariable("id") Long id
+    ) {
+        communityService.deleteCommunity(id);
+        return ResponseEntity.noContent().build();
     }
 }
