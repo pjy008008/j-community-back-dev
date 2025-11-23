@@ -49,13 +49,18 @@ public class SecurityConfig {
                         .requestMatchers(swaggerPaths).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
+
                         .requestMatchers(HttpMethod.GET, "/api/communities/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/communities").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/communities/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/communities/**").hasRole("ADMIN")
+
                         .requestMatchers(HttpMethod.GET, "/api/posts/{postId}/comments").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/{postId}/comments").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/comments/{commentId}/replies").authenticated()
+
                         .requestMatchers(HttpMethod.DELETE, "/api/auth/withdraw").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().authenticated()
