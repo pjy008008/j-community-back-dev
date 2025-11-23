@@ -44,4 +44,9 @@ public class Post extends BaseTimeEntity {
         this.author = author;
         this.community = community;
     }
+
+    public void update(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
 }
