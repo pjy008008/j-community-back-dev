@@ -11,7 +11,8 @@ public record CommunityResponse(
         String colorTheme,
         String creatorName,
         LocalDateTime createdAt,
-        int postCount
+        int postCount,
+        int memberCount
 ) {
     public static CommunityResponse from(Community community) {
         return new CommunityResponse(
@@ -21,7 +22,8 @@ public record CommunityResponse(
                 community.getColorTheme().getCssClass(),
                 community.getCreator().getUsername(),
                 community.getCreatedAt(),
-                community.getPosts().size()
+                community.getPosts().size(),
+                community.getMembers().size()
         );
     }
 }
