@@ -1,9 +1,15 @@
 package com.pjy008008.j_community.controller;
 
+import com.pjy008008.j_community.controller.dto.ErrorResponse;
 import com.pjy008008.j_community.controller.dto.PostCreateRequest;
 import com.pjy008008.j_community.controller.dto.PostResponse;
+import com.pjy008008.j_community.controller.dto.PostUpdateRequest;
 import com.pjy008008.j_community.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,5 +58,36 @@ public class PostController {
     ) {
         Page<PostResponse> posts = postService.getPostsByCommunity(communityName, pageable);
         return ResponseEntity.ok(posts);
+    }
+
+    @Operation(summary = "게시글 수정", description = "자신이 작성한 게시글을 수정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = PostResponse.class))),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (작성자 아님)", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<PostResponse> updatePost(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody PostUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        PostResponse response = postService.updatePost(id, request, userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "게시글 삭제", description = "자신이 작성한 게시글을 삭제합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (작성자 아님)", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "게시글을 찾을 수 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePost(
+            @PathVariable("id") Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        postService.deletePost(id, userDetails.getUsername());
+        return ResponseEntity.noContent().build();
     }
 }
