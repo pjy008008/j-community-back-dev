@@ -8,6 +8,7 @@ import com.pjy008008.j_community.entity.CommentVote;
 import com.pjy008008.j_community.entity.Post;
 import com.pjy008008.j_community.entity.User;
 import com.pjy008008.j_community.exception.ResourceNotFoundException;
+import com.pjy008008.j_community.model.NotificationType;
 import com.pjy008008.j_community.model.VoteType;
 import com.pjy008008.j_community.repository.CommentRepository;
 import com.pjy008008.j_community.repository.CommentVoteRepository;
@@ -34,6 +35,7 @@ public class CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final CommentVoteRepository commentVoteRepository;
+    private final NotificationService notificationService;
 
     public List<CommentResponse> getCommentsByPost(Long postId, String username) {
         if (!postRepository.existsById(postId)) {
@@ -77,6 +79,13 @@ public class CommentService {
                 .build();
 
         Comment savedComment = commentRepository.save(newComment);
+
+        notificationService.send(
+                post.getAuthor(),
+                author,
+                NotificationType.COMMENT,
+                request.content()
+        );
         return CommentResponse.from(savedComment);
     }
 
@@ -96,6 +105,14 @@ public class CommentService {
                 .build();
 
         Comment savedReply = commentRepository.save(reply);
+
+        notificationService.send(
+                parentComment.getAuthor(),
+                author,
+                NotificationType.REPLY,
+                request.content()
+        );
+
         return CommentResponse.from(savedReply);
     }
 
@@ -144,6 +161,15 @@ public class CommentService {
                     .voteType(voteType)
                     .build();
             commentVoteRepository.save(newVote);
+
+            if (voteType == VoteType.UP) {
+                notificationService.send(
+                        comment.getAuthor(),
+                        user,
+                        NotificationType.UPVOTE_COMMENT,
+                        comment.getContent()
+                );
+            }
         }
 
         return comment.getVotes();
