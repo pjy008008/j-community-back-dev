@@ -4,10 +4,13 @@ import com.pjy008008.j_community.controller.dto.CommentCreateRequest;
 import com.pjy008008.j_community.controller.dto.CommentResponse;
 import com.pjy008008.j_community.controller.dto.CommentUpdateRequest;
 import com.pjy008008.j_community.entity.Comment;
+import com.pjy008008.j_community.entity.CommentVote;
 import com.pjy008008.j_community.entity.Post;
 import com.pjy008008.j_community.entity.User;
 import com.pjy008008.j_community.exception.ResourceNotFoundException;
+import com.pjy008008.j_community.model.VoteType;
 import com.pjy008008.j_community.repository.CommentRepository;
+import com.pjy008008.j_community.repository.CommentVoteRepository;
 import com.pjy008008.j_community.repository.PostRepository;
 import com.pjy008008.j_community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +19,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,16 +33,34 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentVoteRepository commentVoteRepository;
 
-    public List<CommentResponse> getCommentsByPost(Long postId) {
+    public List<CommentResponse> getCommentsByPost(Long postId, String username) {
         if (!postRepository.existsById(postId)) {
             throw new ResourceNotFoundException("Post not found with id: " + postId);
         }
-
         List<Comment> topLevelComments = commentRepository.findByPostIdAndParentIsNullOrderByCreatedAtAsc(postId);
 
+        Map<Long, VoteType> userVotes = Collections.emptyMap();
+
+        if (username != null) {
+            User user = userRepository.findByUsername(username)
+                    .orElse(null);
+
+            if (user != null) {
+                List<CommentVote> votes = commentVoteRepository.findByUserIdAndComment_Post_Id(user.getId(), postId);
+
+                userVotes = votes.stream()
+                        .collect(Collectors.toMap(
+                                v -> v.getComment().getId(),
+                                CommentVote::getVoteType
+                        ));
+            }
+        }
+
+        Map<Long, VoteType> finalUserVotes = userVotes;
         return topLevelComments.stream()
-                .map(CommentResponse::from)
+                .map(comment -> CommentResponse.from(comment, finalUserVotes))
                 .collect(Collectors.toList());
     }
 
@@ -93,6 +117,36 @@ public class CommentService {
         validateAuthor(comment, username);
 
         commentRepository.delete(comment);
+    }
+
+    @Transactional
+    public int voteComment(Long commentId, VoteType voteType, String username) {
+        User user = findUserByUsername(username);
+        Comment comment = findCommentById(commentId);
+
+        Optional<CommentVote> existingVote = commentVoteRepository.findByUserIdAndCommentId(user.getId(), commentId);
+
+        if (existingVote.isPresent()) {
+            CommentVote vote = existingVote.get();
+
+            if (vote.getVoteType() == voteType) {
+                comment.updateVotes(-voteType.getValue());
+                commentVoteRepository.delete(vote);
+            } else {
+                comment.updateVotes(-vote.getVoteType().getValue() + voteType.getValue());
+                vote.updateVoteType(voteType);
+            }
+        } else {
+            comment.updateVotes(voteType.getValue());
+            CommentVote newVote = CommentVote.builder()
+                    .user(user)
+                    .comment(comment)
+                    .voteType(voteType)
+                    .build();
+            commentVoteRepository.save(newVote);
+        }
+
+        return comment.getVotes();
     }
 
     private void validateAuthor(Comment comment, String username) {
