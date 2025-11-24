@@ -51,6 +51,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/posts").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/posts/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/upvote").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/downvote").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/api/communities/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/communities").hasRole("ADMIN")
