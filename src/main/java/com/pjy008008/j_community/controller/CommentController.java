@@ -4,6 +4,7 @@ import com.pjy008008.j_community.controller.dto.CommentCreateRequest;
 import com.pjy008008.j_community.controller.dto.CommentResponse;
 import com.pjy008008.j_community.controller.dto.CommentUpdateRequest;
 import com.pjy008008.j_community.controller.dto.ErrorResponse;
+import com.pjy008008.j_community.model.VoteType;
 import com.pjy008008.j_community.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,13 +31,15 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    @Operation(summary = "게시글의 댓글 전체 조회", description = "특정 게시글의 모든 댓글과 대댓글을 계층 구조로 조회합니다.")
+    @Operation(summary = "게시글의 댓글 전체 조회", description = "특정 게시글의 모든 댓글과 대댓글을 조회합니다. (로그인 시 본인 투표 상태 포함)")
     @GetMapping("/posts/{postId}/comments")
     public ResponseEntity<List<CommentResponse>> getCommentsByPost(
-            @Parameter(description = "조회할 댓글의 게시글 ID", required = true)
-            @PathVariable("postId") Long postId
+            @PathVariable("postId") Long postId,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        List<CommentResponse> comments = commentService.getCommentsByPost(postId);
+        String username = (userDetails != null) ? userDetails.getUsername() : null;
+
+        List<CommentResponse> comments = commentService.getCommentsByPost(postId, username);
         return ResponseEntity.ok(comments);
     }
 
@@ -93,5 +96,25 @@ public class CommentController {
     ) {
         commentService.deleteComment(commentId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "댓글 추천", description = "댓글을 추천(+1)하거나 취소합니다.")
+    @PostMapping("/comments/{commentId}/upvote")
+    public ResponseEntity<Integer> upvoteComment(
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        int currentVotes = commentService.voteComment(commentId, VoteType.UP, userDetails.getUsername());
+        return ResponseEntity.ok(currentVotes);
+    }
+
+    @Operation(summary = "댓글 비추천", description = "댓글을 비추천(-1)하거나 취소합니다.")
+    @PostMapping("/comments/{commentId}/downvote")
+    public ResponseEntity<Integer> downvoteComment(
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        int currentVotes = commentService.voteComment(commentId, VoteType.DOWN, userDetails.getUsername());
+        return ResponseEntity.ok(currentVotes);
     }
 }
