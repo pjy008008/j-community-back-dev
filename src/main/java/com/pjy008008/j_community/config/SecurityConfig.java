@@ -65,6 +65,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/comments/*/upvote").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/comments/*/downvote").authenticated()
 
+                        .requestMatchers("/api/notifications/**").authenticated()
+
                         .requestMatchers(HttpMethod.DELETE, "/api/auth/withdraw").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().authenticated()
