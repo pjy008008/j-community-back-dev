@@ -37,6 +37,10 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
+    private String provider;
+
+    private String providerId;
+
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
 
@@ -47,11 +51,13 @@ public class User implements UserDetails {
     private List<UserCommunity> joinedCommunities = new ArrayList<>();
 
     @Builder
-    public User(String username, String email, String password, Role role) {
+    public User(String username, String email, String password, Role role, String provider, String providerId) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.role = (role != null) ? role : Role.ROLE_USER;
+        this.provider = (provider != null) ? provider : "none";
+        this.providerId = providerId;
     }
 
     @Override
